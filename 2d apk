@@ -29,19 +29,78 @@ class TwoDBetEntryScreen extends StatefulWidget {
 }
 
 class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
-  String inputText = "";
+  // State variables for interactive logic
+  String activeField = 'number'; // 'number' or 'amount'
+  String numberInput = "";
+  String amountInput = "";
+  List<Map<String, dynamic>> betList = [];
+  double totalBetAmount = 0;
+  final TextEditingController _nameController = TextEditingController(text: "zmk");
 
   void _onKeyTap(String value) {
     setState(() {
       if (value == 'Del') {
-        if (inputText.isNotEmpty) {
-          inputText = inputText.substring(0, inputText.length - 1);
+        if (activeField == 'number') {
+          if (numberInput.isNotEmpty) {
+            numberInput = numberInput.substring(0, numberInput.length - 1);
+          }
+        } else {
+          if (amountInput.isNotEmpty) {
+            amountInput = amountInput.substring(0, amountInput.length - 1);
+          }
         }
-      } else if (value == 'OK' || value == 'ADD') {
-        // Logic for adding bet
+      } else if (value == 'ADD' || value == 'OK') {
+        _addNewBet();
+      } else if (value == 'Paste') {
+        // Sample fast entry
+        numberInput = "45";
+        amountInput = "1000";
+        activeField = 'amount';
       } else {
-        inputText += value;
+        // Handle normal numbers and multipliers
+        if (activeField == 'number') {
+          if (numberInput.length < 2) {
+            numberInput += value;
+          }
+          if (numberInput.length == 2) {
+            activeField = 'amount'; // Auto switch to amount when 2 digits are entered
+          }
+        } else {
+          if (value == '00') {
+            amountInput += '00';
+          } else if (value == '000') {
+            amountInput += '000';
+          } else {
+            amountInput += value;
+          }
+        }
       }
+    });
+  }
+
+  void _addNewBet() {
+    if (numberInput.length == 2 && amountInput.isNotEmpty) {
+      double amount = double.tryParse(amountInput) ?? 0;
+      if (amount > 0) {
+        setState(() {
+          betList.insert(0, {
+            'number': numberInput,
+            'amount': amount,
+            'time': DateTime.now().toString().substring(11, 16)
+          });
+          totalBetAmount += amount;
+          numberInput = "";
+          amountInput = "";
+          activeField = 'number'; // Reset back to number entry
+        });
+      }
+    }
+  }
+
+  void _clearAllBets() {
+    setState(() {
+      betList.clear();
+      totalBetAmount = 0;
     });
   }
 
@@ -54,9 +113,9 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
         leading: const BackButton(color: Colors.black),
         title: Row(
           children: [
-            const Text(
-              'zmk',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+            Text(
+              _nameController.text,
+              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(width: 8),
             const Text('C:15%', style: TextStyle(color: Colors.blue, fontSize: 11)),
@@ -66,13 +125,13 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
             const Text('A:500000 ks', style: TextStyle(color: Colors.green, fontSize: 11)),
           ],
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 16.0),
             child: Center(
               child: Text(
-                '200050 ks',
-                style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15),
+                '${totalBetAmount.toStringAsFixed(0)} ks',
+                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
           ),
@@ -84,6 +143,10 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: TextField(
+              controller: _nameController,
+              onChanged: (val) {
+                setState(() {});
+              },
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.person, color: Colors.grey),
                 hintText: 'ထိုးသူအမည်',
@@ -102,67 +165,115 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildIconButton(Icons.article, 'လေလျော့', Colors.orange),
+              _buildIconButton(Icons.delete_sweep, 'စာရင်းဖျက်', Colors.orange, onTap: _clearAllBets),
               _buildIconButton(Icons.history, 'မှတ်တမ်း', Colors.grey),
               _buildIconButton(Icons.monetization_on, 'ရှင်းတမ်း', Colors.green),
             ],
           ),
           
           const SizedBox(height: 10),
-          
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.settings, size: 20, color: Colors.blueGrey),
-              SizedBox(width: 4),
-              Text('POA', style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
-              SizedBox(width: 15),
-              Icon(Icons.print_disabled, size: 20, color: Colors.blueGrey),
-            ],
+
+          // Live Data Display List (ထည့်ထားသော စာရင်းများ ပြသမည့်နေရာ)
+          Expanded(
+            child: betList.isEmpty
+                ? const Center(
+                    child: Text(
+                      'စာရင်းများ မရှိသေးပါ။ ဂဏန်းရိုက်ထည့်ပါ။',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: betList.length,
+                    itemBuilder: (context, index) {
+                      final item = betList[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'ဂဏန်း: ${item['number']}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E3A8A)),
+                            ),
+                            Text(
+                              '${item['amount'].toStringAsFixed(0)} ks',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
+                            ),
+                            Text(
+                              '${item['time']}',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
 
-          const Spacer(),
-
-          // 2D Filter Tabs
+          // Interactive Input Status Boxes (ဂဏန်း နှင့် ပမာဏ ရိုက်ကွက်)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Text('2D', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        activeField = 'number';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: activeField == 'number' ? const Color(0xFFEBF5FF) : Colors.white,
+                        border: Border.all(color: activeField == 'number' ? Colors.blue : Colors.grey.shade300, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          numberInput.isEmpty ? 'ဂဏန်း' : numberInput,
+                          style: TextStyle(
+                            color: activeField == 'number' ? Colors.blue : Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F2F5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Text('0 ks', style: TextStyle(color: Colors.grey)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F2F5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Text('0 ks', style: TextStyle(color: Colors.grey)),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        activeField = 'amount';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: activeField == 'amount' ? const Color(0xFFEBF5FF) : Colors.white,
+                        border: Border.all(color: activeField == 'amount' ? Colors.blue : Colors.grey.shade300, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          amountInput.isEmpty ? 'ပမာဏ' : '$amountInput ks',
+                          style: TextStyle(
+                            color: activeField == 'amount' ? Colors.blue : Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -170,15 +281,12 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
             ),
           ),
 
-          const SizedBox(height: 10),
-
-          // Keypad & Shortcuts Grid Section
+          // Custom Keypad
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                // Top Shortcuts
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: ['အုပ်စု', 'ခွေ', 'ခွေပူး', 'အပူး', 'စုံပူး']
@@ -186,33 +294,30 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
                       .toList(),
                 ),
                 const SizedBox(height: 10),
-
-                // Keypad Layout with Left Shortcuts
                 Row(
                   children: [
-                    // Left Column Shortcuts
                     SizedBox(
-                      width: 60,
+                      width: 50,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: ['ထိပ်', 'နောက်', 'ကြိတ်', 'ပါတ်']
                             .map((label) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0),
                                   child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
                                 ))
                             .toList(),
                       ),
                     ),
-                    // Main Keypad Grid
                     Expanded(
                       child: GridView.count(
                         shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         crossAxisCount: 4,
                         childAspectRatio: 1.6,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 6,
+                        crossAxisSpacing: 6,
                         children: [
-                          _buildKey('1'), _buildKey('2'), _buildKey('3'), _buildKey('Paste', color: Colors.grey),
+                          _buildKey('1'), _buildKey('2'), _buildKey('3'), _buildKey('Paste', color: Colors.blueGrey),
                           _buildKey('4'), _buildKey('5'), _buildKey('6'), _buildKey('Del', color: Colors.red),
                           _buildKey('7'), _buildKey('8'), _buildKey('9'), _buildKey('OK', color: Colors.blue),
                           _buildKey('0'), _buildKey('00'), _buildKey('000'), _buildKey('ADD', color: Colors.green),
@@ -229,13 +334,16 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
     );
   }
 
-  Widget _buildIconButton(IconData icon, String label, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 11)),
-      ],
+  Widget _buildIconButton(IconData icon, String label, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(color: color, fontSize: 11)),
+        ],
+      ),
     );
   }
 
@@ -245,12 +353,13 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: (label.length > 2) ? 14 : 18,
+            fontSize: (label.length > 2) ? 13 : 18,
             fontWeight: FontWeight.bold,
             color: color ?? const Color(0xFF1E3A8A),
           ),
@@ -259,3 +368,4 @@ class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
     );
   }
 }
+
