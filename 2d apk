@@ -1,0 +1,261 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: '2D Owner Pro',
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        primarySwatch: Colors.blue,
+      ),
+      home: const TwoDBetEntryScreen(),
+    );
+  }
+}
+
+class TwoDBetEntryScreen extends StatefulWidget {
+  const TwoDBetEntryScreen({super.key});
+
+  @override
+  State<TwoDBetEntryScreen> createState() => _TwoDBetEntryScreenState();
+}
+
+class _TwoDBetEntryScreenState extends State<TwoDBetEntryScreen> {
+  String inputText = "";
+
+  void _onKeyTap(String value) {
+    setState(() {
+      if (value == 'Del') {
+        if (inputText.isNotEmpty) {
+          inputText = inputText.substring(0, inputText.length - 1);
+        }
+      } else if (value == 'OK' || value == 'ADD') {
+        // Logic for adding bet
+      } else {
+        inputText += value;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: const BackButton(color: Colors.black),
+        title: Row(
+          children: [
+            const Text(
+              'zmk',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(width: 8),
+            const Text('C:15%', style: TextStyle(color: Colors.blue, fontSize: 11)),
+            const SizedBox(width: 4),
+            const Text('R:x80', style: TextStyle(color: Colors.red, fontSize: 11)),
+            const SizedBox(width: 4),
+            const Text('A:500000 ks', style: TextStyle(color: Colors.green, fontSize: 11)),
+          ],
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                '200050 ks',
+                style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // ထိုးသူအမည် Input Box
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                hintText: 'ထိုးသူအမည်',
+                filled: true,
+                fillColor: const Color(0xFFEBF5FF),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+
+          // Shortcut Action Icons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildIconButton(Icons.article, 'လေလျော့', Colors.orange),
+              _buildIconButton(Icons.history, 'မှတ်တမ်း', Colors.grey),
+              _buildIconButton(Icons.monetization_on, 'ရှင်းတမ်း', Colors.green),
+            ],
+          ),
+          
+          const SizedBox(height: 10),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.settings, size: 20, color: Colors.blueGrey),
+              SizedBox(width: 4),
+              Text('POA', style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+              SizedBox(width: 15),
+              Icon(Icons.print_disabled, size: 20, color: Colors.blueGrey),
+            ],
+          ),
+
+          const Spacer(),
+
+          // 2D Filter Tabs
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blue),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text('2D', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text('0 ks', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text('0 ks', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Keypad & Shortcuts Grid Section
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                // Top Shortcuts
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: ['အုပ်စု', 'ခွေ', 'ခွေပူး', 'အပူး', 'စုံပူး']
+                      .map((label) => Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)))
+                      .toList(),
+                ),
+                const SizedBox(height: 10),
+
+                // Keypad Layout with Left Shortcuts
+                Row(
+                  children: [
+                    // Left Column Shortcuts
+                    SizedBox(
+                      width: 60,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: ['ထိပ်', 'နောက်', 'ကြိတ်', 'ပါတ်']
+                            .map((label) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                    // Main Keypad Grid
+                    Expanded(
+                      child: GridView.count(
+                        shrinkWrap: true,
+                        crossAxisCount: 4,
+                        childAspectRatio: 1.6,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        children: [
+                          _buildKey('1'), _buildKey('2'), _buildKey('3'), _buildKey('Paste', color: Colors.grey),
+                          _buildKey('4'), _buildKey('5'), _buildKey('6'), _buildKey('Del', color: Colors.red),
+                          _buildKey('7'), _buildKey('8'), _buildKey('9'), _buildKey('OK', color: Colors.blue),
+                          _buildKey('0'), _buildKey('00'), _buildKey('000'), _buildKey('ADD', color: Colors.green),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, String label, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 11)),
+      ],
+    );
+  }
+
+  Widget _buildKey(String label, {Color? color}) {
+    return InkWell(
+      onTap: () => _onKeyTap(label),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: (label.length > 2) ? 14 : 18,
+            fontWeight: FontWeight.bold,
+            color: color ?? const Color(0xFF1E3A8A),
+          ),
+        ),
+      ),
+    );
+  }
+}
